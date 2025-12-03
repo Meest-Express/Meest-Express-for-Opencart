@@ -1,0 +1,256 @@
+{{ header }}{{ column_left }}
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <h1 class="meest-title">{{ heading_title }} {{ text_parcel_info }}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    {% for breadcrumb in breadcrumbs %}
+                        <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                    {% endfor %}
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="container-fluid">
+        {% if response.status == 'OK' %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title meest-group-h3">{{ text_parcel_info }}</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless parcel-table">
+                        <tr>
+                            <td>{{ text_parcel_id }}</td>
+                            <td>{{ response.result.parcelID }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ text_parcel_number }}</td>
+                            <td>{{ response.result.parcelNumber }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ text_barcode }}</td>
+                            <td>{{ response.result.barCode }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ text_pay_type }}</td>
+                            <td>{{ response.result.payType == 'cash' ? text_pay_cash : text_pay_non_cash }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ text_receiver_pay }}</td>
+                            <td>{{ response.result.receiverPay ? text_receiver_yes : text_receiver_no }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ text_cost_services }}</td>
+                            <td>{{ response.result.costServices }} ₴</td>
+                        </tr>
+                        <tr>
+                            <td>{{ text_weight }}</td>
+                            <td>{{ response.result.weight }} кг</td>
+                        </tr>
+                        <tr>
+                            <td>{{ text_sending_date }}</td>
+                            <td>{{ response.result.sendingDate }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ text_sender }}</td>
+                            <td>{{ response.result.sender.name }} ({{ response.result.sender.phone }})</td>
+                        </tr>
+                        <tr>
+                            <td>{{ text_receiver }}</td>
+                            <td>{{ response.result.receiver.name }} ({{ response.result.receiver.phone }})</td>
+                        </tr>
+                        <tr>
+                            <td>{{ text_sender_address }}</td>
+                            <td>{{ response.result.sender.addressDescr }}, {{ response.result.sender.building }} ({{ response.result.sender.service }})</td>
+                        </tr>
+                        <tr>
+                            <td>{{ text_receiver_address }}</td>
+                            <td>{{ response.result.receiver.addressDescr }}, {{ response.result.receiver.building }} ({{ response.result.receiver.service }})</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            {% if response.result.COD|default(0) > 0 %}
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title meest-group-h3">{{ text_card_for_cod }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless parcel-table">
+                            <tr>
+                                <td>COD</td>
+                                <td>{{ response.result.COD }}</td>
+                            </tr>
+                            {% for key, value in response.result.cardForCOD %}
+                                <tr>
+                                    <td>{{ key }}</td>
+                                    <td>{{ value }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title meest-group-h3">{{ text_package_details }}</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless parcel-table">
+                        {% for place in response.result.placesItems %}
+                            <tr class="subheader">
+                                <td><strong>{{ text_place | format(loop.index) }}</strong></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>{{ text_place_quantity }}</td>
+                                <td>{{ place.quantity }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ text_place_weight }}</td>
+                                <td>{{ place.weight }} кг</td>
+                            </tr>
+                            <tr>
+                                <td>{{ text_place_volume }}</td>
+                                <td>{{ place.volume }} м³</td>
+                            </tr>
+                            <tr>
+                                <td>{{ text_place_length }}</td>
+                                <td>{{ place.length }} см</td>
+                            </tr>
+                            <tr>
+                                <td>{{ text_place_width }}</td>
+                                <td>{{ place.width }} см</td>
+                            </tr>
+                            <tr>
+                                <td>{{ text_place_height }}</td>
+                                <td>{{ place.height }} см</td>
+                            </tr>
+                            <tr>
+                                <td>{{ text_insurance }}</td>
+                                <td>{{ place.insurance }} ₴</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title meest-group-h3">{{ text_special_conditions }}</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless parcel-table">
+                        {% for condition in response.result.specConditionsItems %}
+                            <tr>
+                                <td>{{ text_condition }}</td>
+                                <td>{{ condition.conditionDescr }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-danger alert-dismissible">
+                <i class="fas fa-exclamation-circle"></i> {{ get_info_error | format(response.info.message) }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap');
+
+.meest-title {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 32px !important;
+    line-height: 130% !important;
+    color: #0061AF !important;
+    margin-bottom: 15px !important;
+}
+
+.meest-group-h3 {
+    color: #000000 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 20px !important;
+    line-height: 130% !important;
+    margin: 0 !important;
+}
+
+.parcel-table {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 130%;
+    color: #2C363F;
+}
+
+.parcel-table td:first-child {
+    width: 250px;
+    font-weight: 500;
+}
+
+.parcel-table tr {
+    border-bottom: 1px solid #F5F7FB;
+}
+
+.parcel-table td {
+    padding: 17px 10px 17px 16px !important;
+    vertical-align: middle;
+}
+
+.subheader td {
+    background-color: #f8f9fa !important;
+    font-weight: bold;
+}
+
+.breadcrumb {
+    background-color: transparent;
+    padding-left: 0;
+    margin-bottom: 10px;
+}
+
+.breadcrumb-item a {
+    color: #89A6CC !important;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 16px !important;
+}
+
+.breadcrumb-item.active,
+.breadcrumb-item:last-child a {
+    color: #0061AF !important;
+    font-weight: 700 !important;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: #89A6CC !important;
+    font-size: 18px !important;
+}
+
+.card {
+    border: none !important;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #F5F7FB;
+    padding: 15px 20px;
+}
+
+.card-body {
+    padding: 20px;
+}
+</style>
+
+{{ footer }}

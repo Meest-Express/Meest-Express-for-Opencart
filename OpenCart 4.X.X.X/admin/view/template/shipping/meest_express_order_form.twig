@@ -1,0 +1,1059 @@
+{{ header }}{{ column_left }}
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col">
+                    <h1 class="meest-heading">{{ heading_title }} {{ text_create_cn }}</h1>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" form="form-meest-cn" id="button-save-cn" class="btn btn-primary">{{ button_save_cn }}</button>
+                </div>
+            </div>
+            <div class="row">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        {% for breadcrumb in breadcrumbs %}
+                            <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                        {% endfor %}
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    {% for error in error_warning %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+    
+    <div class="container-fluid">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-meest-cn" class="form-horizontal">
+            {% if error_warning %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> {{ error_warning }}
+                </div>
+            {% endif %}
+            
+            <input type="hidden" name="sender_delivery_type" id="sender_delivery_type" value="branch">
+            <input type="hidden" name="recipient_delivery_type" id="recipient_delivery_type" value="branch">
+            <input type="hidden" name="order_number" value="{{ order_id }}" id="input-order_number"/>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 class="card-title mb-0">{{ text_sender }}</h3>
+                            <div class="btn-group" role="group" data-bs-toggle="buttons">
+                                <input type="radio" class="btn-check" name="sender_address_type" value="branch" id="sender_branch" checked>
+                                <label class="btn btn-outline-primary btn-sm" for="sender_branch" data-bs-toggle="tooltip" title="{{ button_branch_delivery }}">
+                                    {{ text_branch }}
+                                </label>
+                                <input type="radio" class="btn-check" name="sender_address_type" value="doors" id="sender_doors" {{ sender_address_type == 'doors' ? 'checked' : '' }}>
+                                <label class="btn btn-outline-primary btn-sm" for="sender_doors" data-bs-toggle="tooltip" title="{{ button_doors_delivery }}">
+                                    {{ text_doors }}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="sender_branch_delivery">
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-contact-person">{{ entry_sender_contact_person }}</label>
+                                <div class="col-sm-9">
+                                    <select name="shipping_meest2_sender_contact_person" id="input-sender-contact-person" class="form-select">
+                                        <option value="">{{ text_select }}</option>
+                                        {% for contact in contacts %}
+                                            <option value="{{ contact.id }}" {% if contact.id == shipping_meest2_sender_contact_person %}selected{% endif %}>
+                                                {{ contact.firstname }} {{ contact.lastname }} {{ contact.middlename }} - {{ contact.phone }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-region">{{ entry_sender_region }}</label>
+                                <div class="col-sm-9">
+                                    <select name="shipping_meest2_sender_region" id="input-sender-region" class="form-select">
+                                        <option value="">{{ text_select }}</option>
+                                        {% for region in regions %}
+                                            <option value="{{ region.region_id }}" {% if region.region_id == shipping_meest2_sender_region %}selected{% endif %}>
+                                                {{ region.region_name_ua }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-city">{{ entry_sender_city }}</label>
+                                <div class="col-sm-9">
+                                    <select name="shipping_meest2_sender_city" id="input-sender-city" class="form-select">
+                                        <option value="">{{ text_select }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-branch">{{ entry_branch }}</label>
+                                <div class="col-sm-9">
+                                    <select name="sender_branch" id="input-sender-branch" class="form-select">
+                                        <option value="">{{ text_select }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body" id="sender_address_delivery" style="display: none;">
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-contact-person-address">{{ entry_sender_contact_person }}</label>
+                                <div class="col-sm-9">
+                                    <select name="shipping_meest2_sender_contact_person" id="input-sender-contact-person-address" class="form-select">
+                                        <option value="">{{ text_select }}</option>
+                                        {% for contact in contacts %}
+                                            <option value="{{ contact.id }}" {% if contact.id == shipping_meest2_sender_contact_person %}selected{% endif %}>
+                                                {{ contact.firstname }} {{ contact.lastname }} {{ contact.middlename }} - {{ contact.phone }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-region-address">{{ entry_sender_region }}</label>
+                                <div class="col-sm-9">
+                                    <select name="sender-region-address" id="input-sender-region-address" class="form-select">
+                                        <option value="">{{ text_select }}</option>
+                                        {% for region in regions %}
+                                            <option value="{{ region.region_id }}" {% if region.region_id == shipping_meest2_sender_region %}selected{% endif %}>
+                                                {{ region.region_name_ua }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-city-address">{{ entry_sender_city }}</label>
+                                <div class="col-sm-9">
+                                    <select name="sender_city_address" id="input-sender-city-address" class="form-select">
+                                        <option value="">{{ text_select }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-address">{{ text_address }}</label>
+                                <div class="col-sm-9">
+                                    <select name="sender_address" id="input-sender-address" class="form-select">
+                                        <option value="">{{ text_select }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-building">{{ text_building }}</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="sender_building" id="input-sender-building" class="form-control" placeholder="{{ text_building }}">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-floor">{{ text_floor }}</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="sender_floor" id="input-sender-floor" class="form-control" placeholder="{{ text_floor }}">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-apartment">{{ text_apartment }}</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="sender_apartment" id="input-sender-apartment" class="form-control" placeholder="{{ text_apartment }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 class="card-title mb-0">{{ text_recipient }}</h3>
+                            <div class="btn-group" role="group" data-bs-toggle="buttons">
+                                <input type="radio" class="btn-check" name="recipient_address_type" value="branch" id="recipient_branch" checked>
+                                <label class="btn btn-outline-primary btn-sm" for="recipient_branch" data-bs-toggle="tooltip" title="{{ button_recipient_branch_delivery }}">
+                                    {{ text_branch }}
+                                </label>
+                                <input type="radio" class="btn-check" name="recipient_address_type" value="doors" id="recipient_doors" {{ recipient_address_type == 'doors' ? 'checked' : '' }}>
+                                <label class="btn btn-outline-primary btn-sm" for="recipient_doors" data-bs-toggle="tooltip" title="{{ button_recipient_doors_delivery }}">
+                                    {{ text_doors }}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="recipient-info-container mb-3">
+                                <h5 class="recipient-info-heading">{{ recipient_shipping_address_data }}</h5>
+                                <p class="recipient-info-alert text-muted">{{ recipient_info_to_form }}</p>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <strong>{{ text_method }}:</strong> {{ shipping_method }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>{{ text_address }}:</strong> {{ shipping_address_1 }} {{ shipping_address_2 }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>{{ entry_region }}:</strong> {{ shipping_zone }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>{{ entry_city }}:</strong> {{ shipping_city }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>{{ text_country }}:</strong> {{ shipping_country }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="recipient_branch_delivery">
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_contact_person">{{ entry_contact_person }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient_contact_person" value="{{ recipient_contact_person }}" placeholder="{{ entry_contact_person }}" id="input-recipient_contact_person" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_contact_person_phone">{{ entry_phone }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient_contact_person_phone" value="{{ recipient_contact_person_phone|default('') }}" placeholder="{{ entry_phone }}" id="input-recipient_contact_person_phone" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_region">{{ entry_region }}</label>
+                                    <div class="col-sm-9">
+                                        <select name="recipient_region" id="input-recipient_region" class="form-select">
+                                            <option value="">{{ text_select }}</option>
+                                            {% for region in regions %}
+                                                <option value="{{ region.region_id }}">{{ region.region_name_ua }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_city">{{ entry_city }}</label>
+                                    <div class="col-sm-9">
+                                        <select name="recipient_city" id="input-recipient_city" class="form-select">
+                                            <option value="">{{ text_select }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_branch" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ recipient_branch_name }}">{{ entry_branch }}</label>
+                                    <div class="col-sm-9">
+                                        <select name="recipient_branch" id="input-recipient_branch" class="form-select">
+                                            <option value="">{{ text_select }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="recipient_address_delivery" style="display: none;">
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_contact_person_address">{{ entry_contact_person }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient_contact_person_address" value="{{ recipient_contact_person }}" placeholder="{{ entry_contact_person }}" id="input-recipient_contact_person_address" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_contact_person_phone_address">{{ entry_phone }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient_contact_person_phone_address" value="{{ recipient_contact_person_phone|default('') }}" placeholder="{{ entry_phone }}" id="input-recipient_contact_person_phone_address" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_region_address">{{ entry_region }}</label>
+                                    <div class="col-sm-9">
+                                        <select name="recipient_region_address" id="input-recipient_region_address" class="form-select">
+                                            <option value="">{{ text_select }}</option>
+                                            {% for region in regions %}
+                                                <option value="{{ region.region_id }}">{{ region.region_name_ua }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_city_address">{{ entry_city }}</label>
+                                    <div class="col-sm-9">
+                                        <select name="recipient_city_address" id="input-recipient_city_address" class="form-select">
+                                            <option value="">{{ text_select }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient-address">{{ text_address }}</label>
+                                    <div class="col-sm-9">
+                                        <select name="recipient_address" id="input-recipient-address" class="form-select">
+                                            <option value="">{{ text_select }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient-building-address">{{ text_building }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient_building_address" id="input-recipient-building-address" class="form-control" placeholder="{{ text_building }}">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient-floor-address">{{ text_floor }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient_floor_address" id="input-recipient-floor-address" class="form-control" placeholder="{{ text_floor }}">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient-apartment-address">{{ text_apartment }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient_apartment_address" id="input-recipient-apartment-address" class="form-control" placeholder="{{ text_apartment }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title mb-0">{{ text_departure_options }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="departure-info-container mb-3">
+                                <h5 class="departure-info-heading">{{ recipient_product_information }}</h5>
+                                <p class="departure-info-paragraph text-muted">{{ recipient_product_detailed_information }}</p>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>{{ text_name }}</th>
+                                                <th>{{ entry_weight }}</th>
+                                                <th>{{ text_dimensions }}</th>
+                                                <th>{{ entry_quantity }}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for product in order_products %}
+                                                <tr>
+                                                    <td>{{ product.name }}</td>
+                                                    <td>{{ "%0.2f"|format(product.weight) }}</td>
+                                                    <td>
+                                                        {{ "%0.2f"|format(product.length) }} × {{ "%0.2f"|format(product.width) }} × {{ "%0.2f"|format(product.height) }}
+                                                    </td>
+                                                    <td>{{ product.quantity }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div id="places-container">
+                                <div class="place-item" data-index="0" style="padding-bottom: 20px; margin-bottom: 20px;">
+                                    <legend class="form-label" style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; color: #0061AF; margin-bottom: 10px;">{{ text_seat }}</legend>
+                                    <div class="row mb-3">
+                                        <label class="col-sm-3 col-form-label">{{ entry_weight }}</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" step="0.01" name="places[0][weight]" value="" placeholder="{{ entry_weight }}" class="form-control" required/>
+                                                <span class="input-group-text">{{ text_kg }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <label class="col-sm-3 col-form-label">{{ entry_length }}</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" step="0.01" name="places[0][length]" value="" placeholder="{{ entry_length }}" class="form-control" required/>
+                                                <span class="input-group-text">{{ text_cm }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <label class="col-sm-3 col-form-label">{{ entry_width }}</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" step="0.01" name="places[0][width]" value="" placeholder="{{ entry_width }}" class="form-control" required/>
+                                                <span class="input-group-text">{{ text_cm }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <label class="col-sm-3 col-form-label">{{ entry_height }}</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" step="0.01" name="places[0][height]" placeholder="{{ entry_height }}" class="form-control" required/>
+                                                <span class="input-group-text">{{ text_cm }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <label class="col-sm-3 col-form-label">{{ entry_quantity }}</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" step="1" name="places[0][quantity]" value="{{ place.quantity }}" placeholder="{{ entry_quantity }}" class="form-control" required/>
+                                                <span class="input-group-text">{{ text_pc }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <label class="col-sm-3 col-form-label">{{ entry_insurance }}</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" step="0.01" name="places[0][insurance]" value="{{ place.insurance }}" placeholder="{{ entry_insurance }}" class="form-control" required/>
+                                                <span class="input-group-text">{{ text_uah }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-sm-9 offset-sm-3 text-end">
+                                            <button type="button" class="btn btn-danger remove-place" style="display:none !important;">{{ text_delete_seat }}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-success" id="add-place">{{ text_add_a_seat }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title mb-0">{{ text_payment }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-delivery_payer">{{ entry_delivery_payer }}</label>
+                                <div class="col-sm-9">
+                                    <div class="btn-group" role="group" data-bs-toggle="buttons">
+                                        {% for v in references['payer_types'] %}
+                                            {% if v.Ref == 'ThirdPerson' and not sender_options['CanPayTheThirdPerson'] %}
+                                                <input type="radio" class="btn-check" name="delivery_payer" value="{{ v.Ref }}" id="input-delivery_payer-{{ v.Ref }}" disabled>
+                                                <label class="btn btn-outline-secondary" for="input-delivery_payer-{{ v.Ref }}">{{ v.Description }}</label>
+                                            {% elseif v.Ref == delivery_payer %}
+                                                <input type="radio" class="btn-check" name="delivery_payer" value="{{ v.Ref }}" id="input-delivery_payer-{{ v.Ref }}" checked>
+                                                <label class="btn btn-outline-primary" for="input-delivery_payer-{{ v.Ref }}">{{ v.Description }}</label>
+                                            {% else %}
+                                                <input type="radio" class="btn-check" name="delivery_payer" value="{{ v.Ref }}" id="input-delivery_payer-{{ v.Ref }}">
+                                                <label class="btn btn-outline-primary" for="input-delivery_payer-{{ v.Ref }}">{{ v.Description }}</label>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-payment_type">{{ entry_payment_type }}</label>
+                                <div class="col-sm-9">
+                                    <div class="btn-group" role="group" data-bs-toggle="buttons">
+                                        {% for v in references['payment_types'] %}
+                                            {% if v.Ref == payment_type %}
+                                                <input type="radio" class="btn-check" name="payment_type" value="{{ v.Ref }}" id="input-payment_type-{{ v.Ref }}" checked>
+                                                <label class="btn btn-outline-primary" for="input-payment_type-{{ v.Ref }}">{{ v.Description }}</label>
+                                            {% else %}
+                                                <input type="radio" class="btn-check" name="payment_type" value="{{ v.Ref }}" id="input-payment_type-{{ v.Ref }}">
+                                                <label class="btn btn-outline-primary" for="input-payment_type-{{ v.Ref }}">{{ v.Description }}</label>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="toggle-cod">{{ text_cod }}</label>
+                                <div class="col-sm-9">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="toggle-cod" name="cod_toggle">
+                                        <label class="form-check-label" for="toggle-cod"></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="cod-amount-container" style="display: none;">
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-cod-amount">{{ text_cod_amount }}</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input type="text" id="input-cod-amount" name="cod_amount" placeholder="{{ text_enter_cod_amount }}" class="form-control" />
+                                            <span class="input-group-text">{{ text_uah }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-card-number">{{ text_card_number }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" id="input-card-number" name="card_number" placeholder="{{ text_enter_card_number }}" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-ownername">{{ text_ownername }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" id="input-ownername" name="ownername" placeholder="{{ text_enter_ownername }}" class="form-control" value="{{ sender_person }}"/>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-ownermobile">{{ text_ownermobile }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" id="input-ownermobile" name="ownermobile" placeholder="{{ text_enter_ownermobile }}" class="form-control" value="{{ sender_phone }}"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title mb-0">{{ text_additionally }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-parcel-number">{{ text_parcel_number }}</label>
+                                <div class="col-sm-9">
+                                    <input type="text" id="input-parcel-number" name="parcel_number" value="" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    window.meest2OrderFormUrls = {
+        ajax_get_cities_url: '{{ ajax_get_cities_url }}',
+        ajax_get_addresses_url: '{{ ajax_get_addresses_url }}',
+        ajax_get_branches_url: '{{ ajax_get_branches_url }}',
+        shipping_meest2_sender_region: '{{ shipping_meest2_sender_region }}',
+        shipping_meest2_sender_city: '{{ shipping_meest2_sender_city }}',
+        shipping_meest2_sender_address: '{{ shipping_meest2_sender_address }}',
+        shipping_meest2_sender_branch: '{{ shipping_meest2_sender_branch }}',
+        shipping_meest2_recipient_city: '{{ shipping_meest2_recipient_city }}',
+        shipping_meest2_recipient_address: '{{ shipping_meest2_recipient_address }}',
+        recipient_contact_person_phone: '{{ recipient_contact_person_phone|default('') }}',
+        text_select: '{{ text_select }}',
+        text_fill_required_fields: '{{ text_fill_required_fields }}',
+        text_seat: '{{ text_seat }}',
+        text_kg: '{{ text_kg }}',
+        text_cm: '{{ text_cm }}',
+        text_pc: '{{ text_pc }}',
+        text_uah: '{{ text_uah }}',
+        text_delete_seat: '{{ text_delete_seat }}',
+        entry_weight: '{{ entry_weight }}',
+        entry_length: '{{ entry_length }}',
+        entry_width: '{{ entry_width }}',
+        entry_height: '{{ entry_height }}',
+        entry_quantity: '{{ entry_quantity }}',
+        entry_insurance: '{{ entry_insurance }}'
+    };
+
+    $(document).ready(function() {
+        // Initialize Select2 for all select elements with search
+        function initSelect2() {
+            // Sender selects
+            $('#input-sender-region').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+            $('#input-sender-city').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+            $('#input-sender-branch').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+            
+            // Sender Doors selects
+            $('#input-sender-region-address').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+            $('#input-sender-city-address').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+            $('#input-sender-address').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+            
+            // Recipient selects
+            $('#input-recipient_region').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+            $('#input-recipient_city').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+            $('#input-recipient_branch').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+            
+            // Recipient Doors selects
+            $('#input-recipient_region_address').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+            $('#input-recipient_city_address').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+            $('#input-recipient-address').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+            
+            // Contact person select
+            $('#input-sender-contact-person').select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+        }
+        
+        // Reinitialize Select2 after AJAX updates
+        function reinitSelect2(selector) {
+            $(selector).select2('destroy');
+            $(selector).select2({ 
+                placeholder: '{{ text_select }}',
+                allowClear: true,
+                width: '100%'
+            });
+        }
+
+        // Toggle sender address type fields
+        $('input[name="sender_address_type"]').change(function() {
+            var selectedType = $(this).val();
+            $('#sender_delivery_type').val(selectedType);
+            $('#sender_branch_delivery').hide();
+            $('#sender_address_delivery').hide();
+            
+            if (selectedType === 'branch') {
+                $('#sender_branch_delivery').show();
+            } else if (selectedType === 'doors') {
+                $('#sender_address_delivery').show();
+            }
+        });
+
+        // Toggle recipient address type fields
+        $('input[name="recipient_address_type"]').change(function() {
+            var selectedType = $(this).val();
+            $('#recipient_delivery_type').val(selectedType);
+            $('#recipient_branch_delivery').hide();
+            $('#recipient_address_delivery').hide();
+            
+            if (selectedType === 'branch') {
+                $('#recipient_branch_delivery').show();
+            } else if (selectedType === 'doors') {
+                $('#recipient_address_delivery').show();
+            }
+        });
+
+        // Load cities when sender region changes
+        $('#input-sender-region').on('change', function() {
+            var regionId = $(this).val();
+            var $citySelect = $('#input-sender-city');
+            var $branchSelect = $('#input-sender-branch');
+            
+            $citySelect.html('<option value="">{{ text_select }}</option>');
+            $branchSelect.html('<option value="">{{ text_select }}</option>');
+            reinitSelect2('#input-sender-city');
+            reinitSelect2('#input-sender-branch');
+            
+            if (regionId) {
+                $.ajax({
+                    url: window.meest2OrderFormUrls.ajax_get_cities_url,
+                    type: 'GET',
+                    data: { region_id: regionId },
+                    dataType: 'json',
+                    success: function(cities) {
+                        if (cities && cities.length > 0) {
+                            $.each(cities, function(index, city) {
+                                var selected = city.city_id == window.meest2OrderFormUrls.shipping_meest2_sender_city ? ' selected' : '';
+                                $citySelect.append('<option value="' + city.city_id + '"' + selected + '>' + city.name_ua + '</option>');
+                            });
+                            
+                            reinitSelect2('#input-sender-city');
+                            
+                            // Trigger change to load branches if city is selected
+                            if (window.meest2OrderFormUrls.shipping_meest2_sender_city) {
+                                $citySelect.trigger('change');
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        // Load branches when sender city changes
+        $('#input-sender-city').on('change', function() {
+            var cityId = $(this).val();
+            var $branchSelect = $('#input-sender-branch');
+            
+            $branchSelect.html('<option value="">{{ text_select }}</option>');
+            reinitSelect2('#input-sender-branch');
+            
+            if (cityId) {
+                $.ajax({
+                    url: window.meest2OrderFormUrls.ajax_get_branches_url,
+                    type: 'GET',
+                    data: { city_id: cityId },
+                    dataType: 'json',
+                    success: function(branches) {
+                        if (branches && branches.length > 0) {
+                            $.each(branches, function(index, branch) {
+                                var branchName = branch.branch_descr_ua || branch.short_name || branch.full_name;
+                                var selected = branch.branch_id == window.meest2OrderFormUrls.shipping_meest2_sender_branch ? ' selected' : '';
+                                $branchSelect.append('<option value="' + branch.branch_id + '"' + selected + '>' + branchName + '</option>');
+                            });
+                            reinitSelect2('#input-sender-branch');
+                        }
+                    }
+                });
+            }
+        });
+
+        // Load cities when recipient region changes
+        $('#input-recipient_region').on('change', function() {
+            var regionId = $(this).val();
+            var $citySelect = $('#input-recipient_city');
+            var $branchSelect = $('#input-recipient_branch');
+            
+            $citySelect.html('<option value="">{{ text_select }}</option>');
+            $branchSelect.html('<option value="">{{ text_select }}</option>');
+            reinitSelect2('#input-recipient_city');
+            reinitSelect2('#input-recipient_branch');
+            
+            if (regionId) {
+                $.ajax({
+                    url: window.meest2OrderFormUrls.ajax_get_cities_url,
+                    type: 'GET',
+                    data: { region_id: regionId },
+                    dataType: 'json',
+                    success: function(cities) {
+                        if (cities && cities.length > 0) {
+                            $.each(cities, function(index, city) {
+                                var selected = city.city_id == window.meest2OrderFormUrls.shipping_meest2_recipient_city ? ' selected' : '';
+                                $citySelect.append('<option value="' + city.city_id + '"' + selected + '>' + city.name_ua + '</option>');
+                            });
+                            
+                            reinitSelect2('#input-recipient_city');
+                            
+                            // Trigger change to load branches if city is selected
+                            if (window.meest2OrderFormUrls.shipping_meest2_recipient_city) {
+                                $citySelect.trigger('change');
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        // Load branches when recipient city changes
+        $('#input-recipient_city').on('change', function() {
+            var cityId = $(this).val();
+            var $branchSelect = $('#input-recipient_branch');
+            
+            $branchSelect.html('<option value="">{{ text_select }}</option>');
+            reinitSelect2('#input-recipient_branch');
+            
+            if (cityId) {
+                $.ajax({
+                    url: window.meest2OrderFormUrls.ajax_get_branches_url,
+                    type: 'GET',
+                    data: { city_id: cityId },
+                    dataType: 'json',
+                    success: function(branches) {
+                        if (branches && branches.length > 0) {
+                            $.each(branches, function(index, branch) {
+                                var branchName = branch.branch_descr_ua || branch.short_name || branch.full_name;
+                                $branchSelect.append('<option value="' + branch.branch_id + '">' + branchName + '</option>');
+                            });
+                            reinitSelect2('#input-recipient_branch');
+                        }
+                    }
+                });
+            }
+        });
+
+            // Load cities when recipient region changes (for Doors delivery)
+            $('#input-recipient_region_address').on('change', function() {
+                var regionId = $(this).val();
+                var $citySelect = $('#input-recipient_city_address');
+                var $addressSelect = $('#input-recipient-address');
+            
+            $citySelect.html('<option value="">{{ text_select }}</option>');
+            $addressSelect.html('<option value="">{{ text_select }}</option>');
+            reinitSelect2('#input-recipient_city_address');
+            reinitSelect2('#input-recipient-address');
+            
+            if (regionId) {
+                $.ajax({
+                    url: window.meest2OrderFormUrls.ajax_get_cities_url,
+                    type: 'GET',
+                    data: { region_id: regionId },
+                    dataType: 'json',
+                    success: function(cities) {
+                        if (cities && cities.length > 0) {
+                            $.each(cities, function(index, city) {
+                                $citySelect.append('<option value="' + city.city_id + '">' + city.name_ua + '</option>');
+                            });
+                            reinitSelect2('#input-recipient-city_address');
+                        }
+                    }
+                });
+            }
+        });
+
+        // Load addresses when recipient city changes (for Doors delivery)
+        $('#input-recipient_city_address').on('change', function() {
+            var cityId = $(this).val();
+            var $addressSelect = $('#input-recipient-address');
+            
+            $addressSelect.html('<option value="">{{ text_select }}</option>');
+            reinitSelect2('#input-recipient-address');
+            
+            if (cityId) {
+                $.ajax({
+                    url: window.meest2OrderFormUrls.ajax_get_addresses_url,
+                    type: 'GET',
+                    data: { city_id: cityId },
+                    dataType: 'json',
+                    success: function(addresses) {
+                        if (addresses && addresses.length > 0) {
+                            $.each(addresses, function(index, address) {
+                                var addressName = address.street_name_ua || address.name_ua;
+                                $addressSelect.append('<option value="' + address.street_id + '">' + addressName + '</option>');
+                            });
+                            reinitSelect2('#input-recipient-address');
+                        }
+                    }
+                });
+            }
+        });
+
+            // Load cities when sender region changes (for Doors delivery)
+            $('#input-sender-region-address').on('change', function() {
+                var regionId = $(this).val();
+                var $citySelect = $('#input-sender-city-address');
+                var $addressSelect = $('#input-sender-address');
+            
+            $citySelect.html('<option value="">{{ text_select }}</option>');
+            $addressSelect.html('<option value="">{{ text_select }}</option>');
+            reinitSelect2('#input-sender-city-address');
+            reinitSelect2('#input-sender-address');
+            
+            if (regionId) {
+                $.ajax({
+                    url: window.meest2OrderFormUrls.ajax_get_cities_url,
+                    type: 'GET',
+                    data: { region_id: regionId },
+                    dataType: 'json',
+                    success: function(cities) {
+                        if (cities && cities.length > 0) {
+                            $.each(cities, function(index, city) {
+                                $citySelect.append('<option value="' + city.city_id + '">' + city.name_ua + '</option>');
+                            });
+                            reinitSelect2('#input-sender-city-address');
+                        }
+                    }
+                });
+            }
+        });
+
+        // Load addresses when sender city changes (for Doors delivery)
+        $('#input-sender-city-address').on('change', function() {
+            var cityId = $(this).val();
+            var $addressSelect = $('#input-sender-address');
+            
+            $addressSelect.html('<option value="">{{ text_select }}</option>');
+            reinitSelect2('#input-sender-address');
+            
+            if (cityId) {
+                $.ajax({
+                    url: window.meest2OrderFormUrls.ajax_get_addresses_url,
+                    type: 'GET',
+                    data: { city_id: cityId },
+                    dataType: 'json',
+                    success: function(addresses) {
+                        if (addresses && addresses.length > 0) {
+                            $.each(addresses, function(index, address) {
+                                var addressName = address.street_name_ua || address.name_ua;
+                                $addressSelect.append('<option value="' + address.street_id + '">' + addressName + '</option>');
+                            });
+                            reinitSelect2('#input-sender-address');
+                        }
+                    }
+                });
+            }
+        });
+
+        // Initialize on page load
+        $('input[name="sender_address_type"]:checked').trigger('change');
+        $('input[name="recipient_address_type"]:checked').trigger('change');
+        
+        // Initialize Select2
+        initSelect2();
+        
+        // Auto-load sender cities and branches on page load
+        if (window.meest2OrderFormUrls.shipping_meest2_sender_region) {
+            $('#input-sender-region').trigger('change');
+        }
+        
+        // Auto-load recipient cities on page load
+        var recipientRegionId = $('#input-recipient_region').val();
+        if (recipientRegionId) {
+            $('#input-recipient_region').trigger('change');
+        }
+        
+        // Auto-fill recipient phone if not already filled
+        if (window.meest2OrderFormUrls.recipient_contact_person_phone) {
+            if (!$('#input-recipient_contact_person_phone').val()) {
+                $('#input-recipient_contact_person_phone').val(window.meest2OrderFormUrls.recipient_contact_person_phone);
+            }
+            if (!$('#input-recipient_contact_person_phone_address').val()) {
+                $('#input-recipient_contact_person_phone_address').val(window.meest2OrderFormUrls.recipient_contact_person_phone);
+            }
+        }
+        
+        // COD toggle functionality
+        $('#toggle-cod').change(function() {
+            if ($(this).is(':checked')) {
+                $('.cod-amount-container').slideDown();
+            } else {
+                $('.cod-amount-container').slideUp();
+            }
+        });
+        
+        // Initialize remove buttons visibility on page load
+        if ($('#places-container .place-item').length === 1) {
+            $('.remove-place').hide();
+            // Remove border from the first element if it's the only one
+            $('#places-container .place-item').first().css('border-bottom', 'none');
+        }
+        
+        // Add Place functionality
+        let placeIndex = 1;
+        $('#add-place').on('click', function() {
+            const container = document.getElementById('places-container');
+            const newPlace = document.createElement('div');
+            newPlace.classList.add('place-item');
+            newPlace.dataset.index = placeIndex;
+            newPlace.style.borderBottom = '1px solid #e0e0e0';
+            newPlace.style.paddingBottom = '20px';
+            newPlace.style.marginBottom = '20px';
+            newPlace.innerHTML = `
+                <legend class="form-label" style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; color: #0061AF; margin-bottom: 10px;">${window.meest2OrderFormUrls.text_seat}</legend>
+                <div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">${window.meest2OrderFormUrls.entry_weight}</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input type="text" step="0.01" name="places[${placeIndex}][weight]" value="" placeholder="${window.meest2OrderFormUrls.entry_weight}" class="form-control" required/>
+                            <span class="input-group-text">${window.meest2OrderFormUrls.text_kg}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">${window.meest2OrderFormUrls.entry_length}</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input type="text" step="0.01" name="places[${placeIndex}][length]" value="" placeholder="${window.meest2OrderFormUrls.entry_length}" class="form-control" required/>
+                            <span class="input-group-text">${window.meest2OrderFormUrls.text_cm}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">${window.meest2OrderFormUrls.entry_width}</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input type="text" step="0.01" name="places[${placeIndex}][width]" value="" placeholder="${window.meest2OrderFormUrls.entry_width}" class="form-control" required/>
+                            <span class="input-group-text">${window.meest2OrderFormUrls.text_cm}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">${window.meest2OrderFormUrls.entry_height}</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input type="text" step="0.01" name="places[${placeIndex}][height]" value="" placeholder="${window.meest2OrderFormUrls.entry_height}" class="form-control" required/>
+                            <span class="input-group-text">${window.meest2OrderFormUrls.text_cm}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">${window.meest2OrderFormUrls.entry_quantity}</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input type="text" step="1" name="places[${placeIndex}][quantity]" value="" placeholder="${window.meest2OrderFormUrls.entry_quantity}" class="form-control" required/>
+                            <span class="input-group-text">${window.meest2OrderFormUrls.text_pc}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">${window.meest2OrderFormUrls.entry_insurance}</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input type="text" step="0.01" name="places[${placeIndex}][insurance]" value="" placeholder="${window.meest2OrderFormUrls.entry_insurance}" class="form-control" required/>
+                            <span class="input-group-text">${window.meest2OrderFormUrls.text_uah}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-9 offset-sm-3">
+                        <button type="button" class="btn btn-danger remove-place float-end">${window.meest2OrderFormUrls.text_delete_seat}</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(newPlace);
+            
+            // Update last item border - remove border from the last element
+            const allPlaces = $('#places-container .place-item');
+            allPlaces.css('border-bottom', '1px solid #e0e0e0');
+            allPlaces.last().css('border-bottom', 'none');
+            
+            // Show all remove buttons if more than 1 place
+            if (container.children.length > 1) {
+                const removeButtons = document.querySelectorAll('.remove-place');
+                removeButtons.forEach(button => {
+                    button.style.display = 'inline-block';
+                });
+            }
+            placeIndex++;
+        });
+        
+        // Remove place functionality
+        $('#places-container').on('click', '.remove-place', function() {
+            const placeItem = $(this).closest('.place-item');
+            placeItem.remove();
+            
+            // Update last item border
+            const allPlaces = $('#places-container .place-item');
+            allPlaces.css('border-bottom', '1px solid #e0e0e0');
+            allPlaces.last().css('border-bottom', 'none');
+            
+            // Hide all remove buttons if only 1 place remains
+            if (allPlaces.length === 1) {
+                $('.remove-place').hide();
+            }
+        });
+    });
+</script>
+
+{{ footer }}

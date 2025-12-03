@@ -1,0 +1,75 @@
+/* Meest Express Styles */
+ul.dropdown-address {
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0px 10px 30px -10px #000000;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  position: absolute !important;
+  z-index: 1000;
+}
+
+.dropdown-address li {
+  list-style-type: none;
+}
+
+.dropdown-address li:hover {
+  background-color: #229ac8;
+}
+
+.dropdown-address li a {
+  color: black;
+  display: block;
+  padding: 7px;
+  text-decoration: none;
+}
+
+.dropdown-address li a:hover {
+  color: white;
+}
+
+/* Select2 Bootstrap 5 Compatibility */
+.select2-container {
+    width: 100% !important;
+}
+
+.select2-container .select2-selection--single {
+    height: 38px !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 0.25rem !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 38px !important;
+    color: #495057 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+}
+
+.select2-dropdown {
+    border: 1px solid #ced4da !important;
+    border-radius: 0.25rem !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #0d6efd !important;
+}
+
+/* Meest Express Fields */
+.meest-express-fields {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.meest-express-fields .form-label {
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+

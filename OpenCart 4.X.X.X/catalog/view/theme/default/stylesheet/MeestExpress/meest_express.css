@@ -1,0 +1,39 @@
+/* Meest Express Shipping Module Styles */
+
+.meest-express-module {
+    margin: 10px 0;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.data-meest {
+    margin: 10px 0;
+}
+
+.data-meest input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.data-meest input:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+#meest-tmp {
+    margin-top: 5px;
+}
+
+#meest-tmp a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+#meest-tmp a:hover {
+    text-decoration: underline;
+}

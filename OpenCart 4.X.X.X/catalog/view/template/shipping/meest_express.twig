@@ -1,0 +1,1037 @@
+<!-- НЕ ЗАГРУЖАЕМ jQuery UI - создаем свой легковесный autocomplete -->
+<style>
+    .meest-autocomplete-list {
+        position: absolute;
+        z-index: 99999 !important;
+        background: white;
+        border: 1px solid #ddd;
+        max-height: 300px;
+        overflow-y: auto;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .meest-autocomplete-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .meest-autocomplete-item:hover {
+        background-color: #f0f0f0;
+    }
+    .meest-autocomplete-item.active {
+        background-color: #0066cc;
+        color: white;
+    }
+</style>
+
+<script>
+(function($) {
+    // Создаем свой простой autocomplete совместимый с jQuery UI API
+    $.fn.autocomplete = function(options) {
+        return this.each(function() {
+            var $input = $(this);
+            var $list = null;
+            var currentData = [];
+            var selectedIndex = -1;
+            
+            // Создаем список результатов
+            function createList() {
+                if (!$list) {
+                    // Оборачиваем input в контейнер если его нет
+                    if (!$input.parent().hasClass('meest-autocomplete-wrapper')) {
+                        $input.wrap('<div class="meest-autocomplete-wrapper" style="position:relative;display:inline-block;width:100%;"></div>');
+                    }
+                    
+                    $list = $('<ul class="meest-autocomplete-list"></ul>');
+                    $list.css({
+                        'width': '100%',
+                        'display': 'none',
+                        'position': 'absolute',
+                        'top': '100%',
+                        'left': '0',
+                        'margin-top': '2px'
+                    });
+                    $input.parent().append($list);
+                }
+                return $list;
+            }
+            
+            // Показываем результаты
+            function showResults(items) {
+                createList();
+                $list.empty();
+                currentData = items;
+                selectedIndex = -1;
+                
+                if (items.length === 0) {
+                    $list.hide();
+                    return;
+                }
+                
+                $.each(items, function(i, item) {
+                    var $item = $('<li class="meest-autocomplete-item"></li>');
+                    $item.text(item.label || item.value);
+                    $item.data('item', item);
+                    $item.on('click', function() {
+                        selectItem(item);
+                    });
+                    $list.append($item);
+                });
+                
+                $list.show();
+            }
+            
+            // Выбор элемента
+            function selectItem(item) {
+                var event = $.Event('select');
+                var ui = { item: item };
+                
+                if (options.select) {
+                    var result = options.select.call($input[0], event, ui);
+                    if (result !== false) {
+                        $input.val(item.value);
+                    }
+                } else {
+                    $input.val(item.value);
+                }
+                
+                $list.hide();
+            }
+            
+            // Обработка ввода
+            $input.on('input', function() {
+                var term = $input.val();
+                
+                if (term.length < (options.minLength || 1)) {
+                    if ($list) $list.hide();
+                    return;
+                }
+                
+                if (options.source && typeof options.source === 'function') {
+                    options.source({ term: term }, showResults);
+                }
+            });
+            
+            // Клавиатурная навигация
+            $input.on('keydown', function(e) {
+                if (!$list || !$list.is(':visible')) return;
+                
+                var $items = $list.find('.meest-autocomplete-item');
+                
+                if (e.keyCode === 40) { // Down
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, $items.length - 1);
+                    $items.removeClass('active').eq(selectedIndex).addClass('active');
+                } else if (e.keyCode === 38) { // Up
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, 0);
+                    $items.removeClass('active').eq(selectedIndex).addClass('active');
+                } else if (e.keyCode === 13) { // Enter
+                    e.preventDefault();
+                    if (selectedIndex >= 0 && currentData[selectedIndex]) {
+                        selectItem(currentData[selectedIndex]);
+                    }
+                } else if (e.keyCode === 27) { // Escape
+                    $list.hide();
+                }
+            });
+            
+            // Закрытие при клике вне
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest($input).length && !$(e.target).closest($list).length) {
+                    if ($list) $list.hide();
+                }
+            });
+        });
+    };
+})(jQuery);
+</script>
+
+<!-- Load Leaflet for maps -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    /* jQuery UI Autocomplete z-index fix */
+    .ui-autocomplete {
+        z-index: 99999 !important;
+        max-height: 300px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    .ui-menu-item {
+        font-size: 14px;
+    }
+    
+    .ui-menu-item-wrapper {
+        padding: 8px 12px;
+    }
+    
+    .meest-express-container {
+        margin: 15px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+    }
+    
+    .meest-express-field-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .meest-express-field-wrapper:last-child {
+        margin-bottom: 0;
+    }
+    
+    .meest-express-input-group {
+        flex: 1;
+        max-width: 50%;
+    }
+    
+    .meest-express-input-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+    }
+    
+    .meest-express-input-group input {
+        width: 100%;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+    
+    .meest-express-input-group input:focus {
+        outline: none;
+        border-color: #4CAF50;
+    }
+    
+    .meest-express-input-group input:disabled {
+        background-color: #f5f5f5;
+        cursor: not-allowed;
+    }
+    
+    .meest-express-map-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background 0.3s;
+        white-space: nowrap;
+        align-self: flex-end;
+    }
+    
+    .meest-express-map-btn:hover {
+        background: #1976D2;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .meest-express-map-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .meest-express-map-btn.hidden {
+        display: none;
+    }
+    
+    /* Модальное окно */
+    .meest-express-modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.3s;
+    }
+    
+    .meest-express-modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .meest-express-modal-content {
+        background-color: #fff;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 1000px;
+        height: 80vh;
+        max-height: 600px;
+        position: relative;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        animation: slideIn 0.3s;
+    }
+    
+    .meest-express-modal-header {
+        padding: 20px;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .meest-express-modal-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 500;
+    }
+    
+    .meest-express-modal-close {
+        background: none;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: #666;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.3s;
+    }
+    
+    .meest-express-modal-close:hover {
+        color: #000;
+    }
+    
+    .meest-express-modal-body {
+        padding: 0;
+        height: calc(100% - 70px);
+    }
+    
+    .meest-express-modal-body iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 0 0 8px 8px;
+    }
+    
+    #meest-express-map {
+        width: 100%;
+        height: 100%;
+        border-radius: 0 0 8px 8px;
+    }
+    
+    .meest-express-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        font-size: 16px;
+        color: #666;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .meest-express-field-wrapper {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .meest-express-input-group {
+            max-width: 100%;
+        }
+        
+        .meest-express-map-btn {
+            margin-top: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<script>
+    if (!window.meestExpressLoaded) {
+        window.meestExpressLoaded = true;
+
+        $(document).ready(function() {
+            // Глобальная переменная для текущего метода доставки
+            var currentShippingMethod = '';
+            
+            // Слушаем изменение метода доставки
+            $(document).on('change', 'input[type="radio"][name="shipping_method"]', function(){
+                const self = this;
+                
+                setTimeout(function() {
+                    var val = $(self).val();
+                    
+                    $('.data-meest-express').remove();
+                    
+                    if (val.indexOf('meest_express.') != -1) {
+                        currentShippingMethod = val;
+                        initMeestExpress();
+                    } else {
+                        currentShippingMethod = '';
+                    }
+                }, 1200);
+            });
+
+        var meestDeliveryTypes = ["meest_express.courier", "meest_express.postomat", "meest_express.warehouse"];
+        
+        // ====== helper: обновление всех полей checkout ======
+        function updateCheckoutFields(city, address) {
+            if (city !== null) {
+                $('input[name="shipping_address[city]"]').each(function() {
+                    $(this).val(city).attr('value', city).trigger('change');
+                });
+            }
+            if (address !== null) {
+                $('input[name="shipping_address[address_1]"]').each(function() {
+                    $(this).val(address).attr('value', address).trigger('change');
+                });
+            }
+        }
+        
+        function initMeestExpress() {
+            var activeShip = $('input[type="radio"][name="shipping_method"]:checked');
+            var meestService = activeShip.val();
+            currentShippingMethod = meestService;
+            
+            if (meestDeliveryTypes.indexOf(meestService) != -1) {
+                var html = '';
+                
+                if (meestService == 'meest_express.postomat') {
+                    html = `
+                        <div class="data-meest-express meest-express-container" data-meest="postomat-container">
+                            <div class="meest-express-field-wrapper">
+                                <div class="meest-express-input-group">
+                                    <label>{{ text_city }}</label>
+                                    <input type="text" class="form-control" data-meest="city" placeholder="{{ text_city }}"/>
+                                </div>
+                            </div>
+                            <div class="meest-express-field-wrapper">
+                                <div class="meest-express-input-group">
+                                    <label>{{ text_postomat }}</label>
+                                    <input type="text" class="form-control" data-meest="postomat" placeholder="{{ text_postomat }}"/>
+                                </div>
+                                <a href="#" class="meest-express-map-btn hidden" id="meest-map-link-postomat" data-map-url="https://www.google.com/maps/search/?api=1&query=Ukraine">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                    </svg>
+                                    Показати на карті
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                } else if (meestService == 'meest_express.warehouse') {
+                    html = `
+                        <div class="data-meest-express meest-express-container" data-meest="warehouse-container">
+                            <div class="meest-express-field-wrapper">
+                                <div class="meest-express-input-group">
+                                    <label>{{ text_city }}</label>
+                                    <input type="text" class="form-control" data-meest="city" placeholder="{{ text_city }}"/>
+                                </div>
+                            </div>
+                            <div class="meest-express-field-wrapper">
+                                <div class="meest-express-input-group">
+                                    <label>{{ text_warehouse }}</label>
+                                    <input type="text" class="form-control" data-meest="warehouse" placeholder="{{ text_warehouse }}"/>
+                                </div>
+                                <a href="#" class="meest-express-map-btn hidden" id="meest-map-link-warehouse" data-map-url="https://www.google.com/maps/search/?api=1&query=Ukraine">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                    </svg>
+                                    Показати на карті
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                } else if (meestService == 'meest_express.courier') {
+                    html = `
+                        <div class="data-meest-express meest-express-container" data-meest="courier-container">
+                            <div class="meest-express-field-wrapper">
+                                <div class="meest-express-input-group">
+                                    <label>{{ text_city }}</label>
+                                    <input type="text" class="form-control" data-meest="city" placeholder="{{ text_city }}"/>
+                                </div>
+                            </div>
+                            <div class="meest-express-field-wrapper">
+                                <div class="meest-express-input-group">
+                                    <label>{{ text_street }}</label>
+                                    <input type="text" class="form-control" data-meest="courier" placeholder="{{ text_street }}"/>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                activeShip.parent().after(html);
+                
+                let address = activeShip.attr('data-address');
+                if (address === undefined) { address = ''; }
+                if (address) {
+                    var city = $('input[data-meest=city]').val();
+                    // Сохраняем город и адрес отдельно
+                    $.post('index.php?route=extension/MeestExpress/shipping/meest_express|save',
+                        'city=' + encodeURIComponent(city) + '&address=' + encodeURIComponent(address)
+                    );
+                }
+                
+                let mService = meestService.split('.');
+                let mServ = mService[1];
+                $('input[data-meest=' + mServ + ']').val(address).attr('value', address);
+                
+                // Показываем кнопку карты при заполнении города
+                $('input[data-meest=city]').on('input change', function() {
+                    var cityValue = $(this).val().trim();
+                    var mapBtn = $(this).closest('.meest-express-container').find('.meest-express-map-btn');
+                    
+                    if (cityValue.length > 0) {
+                        mapBtn.removeClass('hidden');
+                    } else {
+                        mapBtn.addClass('hidden');
+                    }
+                });
+                
+                var element;
+                
+                // Автокомплит для городов
+                $('input[data-meest=city]').autocomplete({
+                    minLength: 1,
+                    source: function(request, response) {
+                        $.ajax({
+                            url: 'index.php?route=extension/MeestExpress/shipping/meest_express|getMeestData',
+                            type: 'POST',
+                            data: {
+                                action: 'getCities',
+                                filter: '',
+                                search: request.term
+                            },
+                            dataType: 'json',
+                            success: function(json) {
+                                if (json && json.length > 0) {
+                                    response($.map(json, function(item) {
+                                        return {
+                                            label: item['type'] + ' ' + item['name'] + ', ' + item['region'],
+                                            city: item['name'],
+                                            value: item['id'],
+                                            city_id: item['id']
+                                        }
+                                    }));
+                                } else {
+                                    response([]);
+                                }
+                            },
+                            error: function() {
+                                response([]);
+                            }
+                        });
+                    },
+                    select: function(event, ui) {
+                        $(this)
+                            .val(ui.item.city)
+                            .attr('value', ui.item.city)
+                            .attr('data-city-id', ui.item.city_id);
+                        
+                        // НЕ заполняем поле города сразу - ждем выбора отделения
+                        
+                        return true;
+                    }
+                });
+                
+                // Автокомплит для отделений/постоматов/улиц
+                $('input[data-meest=' + mServ + ']').autocomplete({
+                    minLength: 1,
+                    source: function(request, response) {
+                        element = $(this);
+                        var cityId = $('input[data-meest=city]').attr('data-city-id');
+                        
+                        if (!cityId) {
+                            response([]);
+                            return;
+                        }
+                        
+                        $.ajax({
+                            url: 'index.php?route=extension/MeestExpress/shipping/meest_express|getMeestData',
+                            type: 'POST',
+                            data: {
+                                action: mServ === 'postomat' ? 'getPoshtomat' : (mServ === 'courier' ? 'getStreets' : 'getBranches'),
+                                filter: cityId,
+                                search: request.term
+                            },
+                            dataType: 'json',
+                            success: function(json) {
+                                if (json && json.length > 0) {
+                                    response($.map(json, function(item) {
+                                        return {
+                                            label: item['description'],
+                                            value: item['description'],
+                                            id: item['id']
+                                        }
+                                    }));
+                                } else {
+                                    response([]);
+                                }
+                            },
+                            error: function() {
+                                response([]);
+                            }
+                        });
+                    },
+                    select: function(event, ui) {
+                        // Сохраняем ID отделения в атрибуте
+                        $(this).attr('data-branch-id', ui.item.id);
+                        
+                        // Получаем город
+                        var city = $('input[data-meest=city]').val();
+                        var address = ui.item.value;
+                        
+                        // Сохраняем адрес
+                        activeShip.attr('data-address', address);
+
+                        // Сохраняем город и адрес отдельно
+                        $.post('index.php?route=extension/MeestExpress/shipping/meest_express|save',
+                            'city=' + encodeURIComponent(city) + '&address=' + encodeURIComponent(address)
+                        );
+                        
+                        // Обновляем главное поле адреса
+                        $('#input-shipping-address-1').val(address);
+                        
+                        // Обновляем все поля checkout после выбора отделения
+                        updateCheckoutFields(city, address);
+                        
+                        // Расчет стоимости после выбора отделения
+                        var cityId = $('input[data-meest=city]').attr('data-city-id');
+                        if (cityId && ui.item.id) {
+                            calculateAndUpdateShippingPrice(mServ, cityId, ui.item.id);
+                        }
+                        
+                        return true;
+                    }
+                });
+                
+                // Обработчик изменений для сохранения адреса
+                $('input[data-meest=' + mServ + ']').on('change', function() {
+                    var city = $('input[data-meest=city]').val();
+                    var address = $(this).val();
+
+                    
+                    $('#input-shipping-address-1').val(address);
+                    // Сохраняем город и адрес отдельно
+                    $.post('index.php?route=extension/MeestExpress/shipping/meest_express|save',
+                        'city=' + encodeURIComponent(city) + '&address=' + encodeURIComponent(address)
+                    );
+                    
+                    // Обновляем все поля checkout
+                    updateCheckoutFields(city, address);
+                });
+            }
+        }
+        
+        // Переменная для хранения объекта карты и слоя маркеров
+        var meestMap = null;
+        var meestMarkersLayer = null;
+        
+        // Обработчик для открытия модального окна с картой
+        $(document).on('click', '.meest-express-map-btn', function(e) {
+            e.preventDefault();
+            
+            // Получаем ID города и тип сервиса
+            var cityId = $('input[data-meest=city]').attr('data-city-id');
+            var cityName = $('input[data-meest=city]').val() || 'Україна';
+            var branchType = '';
+            
+            // Определяем тип отделения по текущему методу доставки
+            if (currentShippingMethod.indexOf('warehouse') !== -1) {
+                branchType = 'warehouse';
+            } else if (currentShippingMethod.indexOf('postomat') !== -1) {
+                branchType = 'postomat';
+            }
+            
+            if (!cityId || !branchType) {
+                alert('Будь ласка, оберіть місто спочатку');
+                return;
+            }
+            
+            // Создаем модальное окно если его еще нет
+            if ($('#meest-express-map-modal').length === 0) {
+                var modal = `
+                    <div id="meest-express-map-modal" class="meest-express-modal">
+                        <div class="meest-express-modal-content">
+                            <div class="meest-express-modal-header">
+                                <h3>Оберіть відділення на карті: ` + cityName + `</h3>
+                                <button class="meest-express-modal-close" id="meest-express-modal-close">&times;</button>
+                            </div>
+                            <div class="meest-express-modal-body">
+                                <div id="meest-express-map"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('body').append(modal);
+            } else {
+                // Обновляем заголовок с названием города
+                $('#meest-express-map-modal .meest-express-modal-header h3').text('Оберіть відділення на карті: ' + cityName);
+            }
+            
+            // Показываем модальное окно
+            $('#meest-express-map-modal').addClass('active');
+            
+            // Показываем индикатор загрузки
+            $('#meest-express-map').html('<div class="meest-express-loading">Завантаження...</div>');
+            
+            // Инициализируем карту после небольшой задержки
+            setTimeout(function() {
+                // Очищаем контейнер
+                $('#meest-express-map').html('');
+                
+                // Удаляем старую карту если существует
+                if (meestMap) {
+                    meestMap.remove();
+                    meestMap = null;
+                    meestMarkersLayer = null;
+                }
+                
+                // Создаем новую карту
+                meestMap = L.map('meest-express-map').setView([48.3794, 31.1656], 6);
+                
+                // Добавляем слой OpenStreetMap
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(meestMap);
+                
+                // Создаем слой для маркеров
+                meestMarkersLayer = L.layerGroup().addTo(meestMap);
+                
+                // Загружаем отделения с координатами
+                $.ajax({
+                    url: 'index.php?route=extension/MeestExpress/shipping/meest_express|getBranchesWithCoordinates',
+                    type: 'POST',
+                    data: {
+                        city_id: cityId,
+                        type: branchType
+                    },
+                    dataType: 'json',
+                    success: function(branches) {
+                        if (!branches || branches.length === 0) {
+                            $('#meest-express-map').html('<div class="meest-express-loading">Відділення не знайдено</div>');
+                            return;
+                        }
+                        
+                        if (branches && branches.length > 0) {
+                            var bounds = [];
+                            
+                            // Добавляем маркер для каждого отделения
+                            $.each(branches, function(index, branch) {
+                                if (branch.latitude && branch.longitude) {
+                                    var lat = parseFloat(branch.latitude);
+                                    var lon = parseFloat(branch.longitude);
+                                    bounds.push([lat, lon]);
+                                    
+                                    // Создаем иконку маркера
+                                    var icon = L.divIcon({
+                                        className: 'meest-marker',
+                                        html: '<div style="background: #2196F3; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">' + (index + 1) + '</div>',
+                                        iconSize: [30, 30],
+                                        iconAnchor: [15, 15]
+                                    });
+                                    
+                                    // Создаем маркер
+                                    var marker = L.marker([lat, lon], {icon: icon}).addTo(meestMarkersLayer);
+                                    
+                                    // Popup с информацией об отделении
+                                    var popupContent = '<div style="min-width: 200px;">' +
+                                        '<strong>' + branch.description + '</strong><br>' +
+                                        (branch.address ? branch.address + '<br>' : '') +
+                                        '<button class="btn btn-primary btn-sm" style="margin-top: 10px; padding: 5px 15px;" onclick="selectBranch(\'' + 
+                                        branch.id + '\', \'' + branch.description.replace(/'/g, "\\'") + '\')">Обрати це відділення</button>' +
+                                        '</div>';
+                                    
+                                    marker.bindPopup(popupContent);
+                                    
+                                    // Открываем popup при клике
+                                    marker.on('click', function() {
+                                        this.openPopup();
+                                    });
+                                }
+                            });
+                            
+                            // Центрируем карту по всем маркерам
+                            if (bounds.length > 0) {
+                                meestMap.fitBounds(bounds, {padding: [50, 50]});
+                            }
+                            
+                            // Обновляем размер карты
+                            setTimeout(function() {
+                                meestMap.invalidateSize();
+                            }, 100);
+                        }
+                    },
+                    error: function() {
+                        $('#meest-express-map').html('<div class="meest-express-loading">Помилка завантаження</div>');
+                    }
+                });
+            }, 100);
+        });
+        
+        // Закрытие модального окна по крестику
+        $(document).on('click', '#meest-express-modal-close', function() {
+            $('#meest-express-map-modal').removeClass('active');
+        });
+        
+        // Закрытие модального окна по клику вне его
+        $(document).on('click', '#meest-express-map-modal', function(e) {
+            if (e.target.id === 'meest-express-map-modal') {
+                $('#meest-express-map-modal').removeClass('active');
+            }
+        });
+        
+        // Глобальная функция для выбора отделения с карты
+        window.selectBranch = function(branchId, branchName) {
+            // Получаем текущий метод доставки
+            var selectedMethod = $('input[name="shipping_method"]:checked').val();
+            
+            // Определяем тип сервиса
+            var mServ = '';
+            if (selectedMethod && selectedMethod.indexOf('warehouse') !== -1) {
+                mServ = 'warehouse';
+            } else if (selectedMethod && selectedMethod.indexOf('postomat') !== -1) {
+                mServ = 'postomat';
+            }
+            
+            if (mServ && selectedMethod) {
+                // Получаем город
+                var city = $('input[data-meest=city]').val();
+                
+                // Заполняем поле с отделением
+                $('input[data-meest=' + mServ + ']').val(branchName);
+                $('input[data-meest=' + mServ + ']').attr('data-branch-id', branchId);
+
+                // Сохраняем город и адрес отдельно
+                $.post('index.php?route=extension/MeestExpress/shipping/meest_express|save',
+                    'city=' + encodeURIComponent(city) + '&address=' + encodeURIComponent(address)
+                );
+                
+                // Обновляем главное поле адреса доставки
+                $('#input-shipping-address-1').val(branchName);
+                
+                // Обновляем все поля checkout после выбора на карте
+                updateCheckoutFields(city, branchName);
+                
+                // Расчет стоимости после выбора отделения
+                var cityId = $('input[data-meest=city]').attr('data-city-id');
+                if (cityId && branchId) {
+                    calculateAndUpdateShippingPrice(mServ, cityId, branchId);
+                }
+                
+                // Закрываем модальное окно
+                $('#meest-express-map-modal').removeClass('active');
+            }
+        };
+        
+        /**
+         * Расчет и обновление цены доставки через API
+         * @param {string} service - Тип сервиса (warehouse, postomat, courier)
+         * @param {string} cityUUID - UUID города получателя
+         * @param {string} addressUUID - UUID отделения или адреса
+         */
+        function calculateAndUpdateShippingPrice(service, cityUUID, addressUUID) {
+            if (!cityUUID || !addressUUID) {
+                return;
+            }
+            
+            // Маппинг сервисов к типам доставки API
+            var serviceMapping = {
+                'warehouse': 'Branch',
+                'postomat': 'Branch',
+                'courier': 'Door'
+            };
+            
+            var receiverService = serviceMapping[service] || 'Branch';
+            
+            // Формируем параметры для расчета
+            var params = {
+                receiver_city_id: cityUUID,
+                receiver_service: receiverService
+            };
+            
+            // Добавляем UUID отделения для warehouse и postomat
+            if ((service === 'warehouse' || service === 'postomat') && addressUUID) {
+                params.receiver_branch_id = addressUUID;
+            }
+            
+            // Добавляем UUID адреса для courier
+            if (service === 'courier' && addressUUID) {
+                params.receiver_address_id = addressUUID;
+            }
+            
+            // Ищем элемент цены по классу
+            var priceElement = $('#meest-express-price-' + service);
+            
+            if (!priceElement.length) {
+                // Альтернативный поиск по классу и data-атрибуту
+                priceElement = $('.meest-express-shipping-price[data-service="' + service + '"]');
+            }
+            
+            if (priceElement && priceElement.length) {
+                var originalText = priceElement.text();
+                priceElement.html('<span style="opacity: 0.5;"><i class="fa fa-spinner fa-spin"></i> Розрахунок...</span>');
+                
+                // Отправляем AJAX-запрос на расчет
+                $.ajax({
+                    url: 'index.php?route=extension/MeestExpress/shipping/meest_express|calculateShippingCost',
+                    type: 'POST',
+                    data: params,
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response && response.success && response.data && (typeof response.data.costServices !== 'undefined')) {
+                            var costInUAH = parseFloat(response.data.costServices) || 0;
+                            
+                            var formattedPrice = (costInUAH <= 0)
+                                ? ''
+                                : costInUAH.toFixed(2) + ' ₴';
+                            
+                            // Обновляем цену в интерфейсе
+                            priceElement.html(formattedPrice);
+                            priceElement.attr('data-cost', costInUAH);
+                            priceElement.attr('data-cost-with-tax', costInUAH);
+                        } else {
+                            // Если расчет не удался, возвращаем оригинальный текст
+                            priceElement.html(originalText);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        // При ошибке возвращаем оригинальный текст
+                        priceElement.html(originalText);
+                    }
+                });
+            }
+        }
+        
+        // Обработчик для сохранения данных Meest при выборе метода доставки
+        // Сохраняем данные при любом изменении (выбор города, отделения, смена метода)
+        function saveMeestExpressData() {
+            var selectedMethod = $('input[name="shipping_method"]:checked').val();
+            console.log('saveMeestExpressData called, selectedMethod:', selectedMethod);
+            
+            // Проверяем, выбран ли Meest Express
+            if (selectedMethod && selectedMethod.indexOf('meest_express') !== -1) {
+                var cityInput = $('input[data-meest=city]');
+                var cityId = cityInput.attr('data-city-id');
+                var cityName = cityInput.val();
+                
+                console.log('City data:', { cityId: cityId, cityName: cityName });
+                
+                var serviceType = selectedMethod.replace('meest_express.', '');
+                var addressInput = $('input[data-meest=' + serviceType + ']');
+                var addressId = addressInput.attr('data-branch-id');
+                var addressName = addressInput.val();
+                
+                console.log('Address data:', { serviceType: serviceType, addressId: addressId, addressName: addressName });
+                
+                // Формируем полный адрес
+                var fullAddress = cityName;
+                if (addressName) {
+                    fullAddress += ', ' + addressName;
+                }
+                
+                // Отправляем данные на сервер если есть все необходимые данные
+                if (cityId && addressId) {
+                    console.log('Sending AJAX to saveMeestData:', {
+                        city_id: cityId,
+                        city_name: cityName,
+                        address_id: addressId,
+                        full_address: fullAddress,
+                        shipping_method: selectedMethod
+                    });
+                    
+                    $.ajax({
+                        url: 'index.php?route=extension/MeestExpress/shipping/meest_express|saveMeestData',
+                        type: 'POST',
+                        data: {
+                            city_id: cityId,
+                            city_name: cityName,
+                            address_id: addressId,
+                            full_address: fullAddress,
+                            shipping_method: selectedMethod
+                        },
+                        dataType: 'json',
+                        async: false,
+                        success: function(response) {
+                            console.log('saveMeestData success:', response);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('saveMeestData error:', error, xhr.responseText);
+                        }
+                    });
+                } else {
+                    console.warn('Missing required data - cityId:', cityId, 'addressId:', addressId);
+                }
+            } else {
+                console.log('Not Meest Express method');
+            }
+        }
+        
+        // Вызываем сохранение при выборе метода доставки
+        $(document).on('change', 'input[name="shipping_method"]', function() {
+            var selectedMethod = $(this).val();
+            if (selectedMethod && selectedMethod.indexOf('meest_express') !== -1) {
+                saveMeestExpressData();
+            }
+        });
+        
+        // Вызываем сохранение перед отправкой формы
+        $(document).on('click', '#button-shipping-method', function(e) {
+            saveMeestExpressData();
+        });
+        
+        // Инициализация при загрузке страницы
+        if (typeof $.fn.autocomplete == 'function') {
+            var selectedMethod = $('input[name="shipping_method"]:checked').val();
+            if (selectedMethod && selectedMethod.indexOf('meest_express') !== -1) {
+                currentShippingMethod = selectedMethod;
+                initMeestExpress();
+            }
+        } else {
+            document.addEventListener('DOMContentLoaded', function() {
+                var selectedMethod = $('input[name="shipping_method"]:checked').val();
+                if (selectedMethod && selectedMethod.indexOf('meest_express') !== -1) {
+                    currentShippingMethod = selectedMethod;
+                    initMeestExpress();
+                }
+            });
+        }
+    });
+    
+    }
+</script>

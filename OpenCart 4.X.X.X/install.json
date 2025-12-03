@@ -1,0 +1,42 @@
+{
+    "name": "Meest Express Shipping",
+    "version": "1.0.0",
+    "author": "Meest Express",
+    "link": "https://meest.com",
+    "type": "shipping",
+    "code": "meest_express",
+    "status": "1",
+    "sort_order": "1",
+    "files": [
+        "extension/MeestExpress/admin/controller/shipping/meest_express.php",
+        "extension/MeestExpress/admin/model/shipping/meest_express.php",
+        "extension/MeestExpress/admin/language/en-gb/shipping/meest_express.php",
+        "extension/MeestExpress/admin/language/ru-ru/shipping/meest_express.php",
+        "extension/MeestExpress/admin/language/uk-ua/shipping/meest_express.php",
+        "extension/MeestExpress/admin/view/template/shipping/meest_express.twig",
+        "extension/MeestExpress/admin/view/stylesheet/MeestExpress/meest_express.css",
+        "extension/MeestExpress/admin/view/javascript/MeestExpress/meest_express.js",
+        "extension/MeestExpress/catalog/controller/shipping/meest_express.php",
+        "extension/MeestExpress/catalog/model/shipping/meest_express.php",
+        "extension/MeestExpress/catalog/language/en-gb/shipping/meest_express.php",
+        "extension/MeestExpress/catalog/language/ru-ru/shipping/meest_express.php",
+        "extension/MeestExpress/catalog/language/uk-ua/shipping/meest_express.php",
+        "extension/MeestExpress/catalog/view/theme/default/template/shipping/meest_express.twig",
+        "extension/MeestExpress/catalog/view/theme/default/stylesheet/MeestExpress/meest_express.css",
+        "extension/MeestExpress/catalog/view/javascript/MeestExpress/meest_express.js",
+        "extension/MeestExpress/system/library/MeestExpress/meest_express.php",
+        "extension/MeestExpress/image/catalog/MeestExpress/icon.png",
+        "extension/MeestExpress/image/catalog/MeestExpress/icon_big.png",
+        "extension/MeestExpress/image/catalog/MeestExpress/logo.png",
+        "extension/MeestExpress/image/catalog/MeestExpress/logo_s.png",
+        "extension/MeestExpress/image/catalog/MeestExpress/logo_small.png",
+        "extension/MeestExpress/image/catalog/MeestExpress/meest_logo.svg",
+        "extension/MeestExpress/image/catalog/MeestExpress/meest-strilka.svg"
+    ],
+    "install": {
+        "admin/controller/extension/MeestExpress/shipping/meest_express": "install"
+    },
+    "uninstall": {
+        "admin/controller/extension/MeestExpress/shipping/meest_express": "uninstall"
+    }
+}

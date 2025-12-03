@@ -1,0 +1,598 @@
+{{ header }}{{ column_left }}
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col">
+                    <h1 class="meest-heading">{{ heading_title }} {{ heading_title_order_update_form }}</h1>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" form="form-meest-cn" id="button-save-cn" class="btn btn-primary">{{ button_save_cn }}</button>
+                </div>
+            </div>
+            <div class="row">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        {% for breadcrumb in breadcrumbs %}
+                            <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                        {% endfor %}
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    {% if get_info_for_edit_error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> {{ get_info_for_edit_error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endif %}
+    
+    <div class="container-fluid">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-meest-cn" class="form-horizontal">
+            
+            <input type="hidden" name="sender_delivery_type" id="sender_delivery_type" value="{{ parcel_info.sender.service == 'Branch' ? 'branch' : 'doors' }}">
+            <input type="hidden" name="recipient_delivery_type" id="recipient_delivery_type" value="{{ parcel_info.receiver.service == 'Branch' ? 'branch' : 'doors' }}">
+            <input type="hidden" name="meest_express_cn_uuid" value="{{ parcel_info.parcelID }}"/>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 class="card-title mb-0">{{ text_sender }}</h3>
+                            <div class="btn-group" role="group" data-bs-toggle="buttons">
+                                <input type="radio" class="btn-check" name="sender_address_type" value="branch" id="sender_branch" {{ parcel_info.sender.service == 'Branch' ? 'checked' : '' }}>
+                                <label class="btn btn-outline-primary btn-sm" for="sender_branch" data-bs-toggle="tooltip" title="{{ button_branch_delivery }}">
+                                    {{ text_branch }}
+                                </label>
+                                <input type="radio" class="btn-check" name="sender_address_type" value="doors" id="sender_doors" {{ parcel_info.sender.service == 'Door' ? 'checked' : '' }}>
+                                <label class="btn btn-outline-primary btn-sm" for="sender_doors" data-bs-toggle="tooltip" title="{{ button_doors_delivery }}">
+                                    {{ text_doors }}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="sender_branch_delivery" style="{{ parcel_info.sender.service != 'Branch' ? 'display: none;' : '' }}">
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender_person">{{ entry_sender }}</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="sender_person" value="{{ parcel_info.sender.name }}" placeholder="{{ entry_sender }}" id="input-sender_person" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender_phone">{{ entry_phone }}</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="sender_phone" value="{{ parcel_info.sender.phone }}" placeholder="{{ entry_phone }}" id="input-sender_phone" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-region">{{ entry_sender_region }}</label>
+                                <div class="col-sm-9">
+                                    <select name="shipping_meest2_sender_region" id="input-sender-region" class="form-select">
+                                        <option value="">{{ text_select }}</option>
+                                        {% for region in regions %}
+                                            <option value="{{ region.region_id }}" {% if region.region_id == branch_sender_info.region_id %}selected{% endif %}>
+                                                {{ region.region_name_ua }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-city">{{ entry_sender_city }}</label>
+                                <div class="col-sm-9">
+                                    <select name="shipping_meest2_sender_city" id="input-sender-city" class="form-select">
+                                        <option value="">{{ text_select }}</option>
+                                        {% if branch_sender_info.city_id %}
+                                        <option value="{{ branch_sender_info.city_id }}" selected>{{ branch_sender_info.city_name_ua }}</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-branch">{{ entry_branch }}</label>
+                                <div class="col-sm-9">
+                                    <select name="sender_branch" id="input-sender-branch" class="form-select">
+                                        <option value="{{ parcel_info.sender.branchID }}" selected>{{ branch_sender_info.branch_descr_ua }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body" id="sender_address_delivery" style="{{ parcel_info.sender.service != 'Door' ? 'display: none;' : '' }}">
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-person-address">{{ entry_sender }}</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="sender_person-address" value="{{ parcel_info.sender.name }}" placeholder="{{ entry_sender }}" id="input-sender-person-address" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-phone-address">{{ entry_phone }}</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="sender_phone-address" value="{{ parcel_info.sender.phone }}" placeholder="{{ entry_phone }}" id="input-sender-phone-address" class="form-control"/>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-region-address">{{ entry_sender_region }}</label>
+                                <div class="col-sm-9">
+                                    <select name="sender-region-address" id="input-sender-region-address" class="form-select">
+                                        <option value="">{{ text_select }}</option>
+                                        {% for region in regions %}
+                                            <option value="{{ region.region_id }}" {% if region.region_id == sender_region_id_address %}selected{% endif %}>
+                                                {{ region.region_name_ua }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-city-address">{{ entry_sender_city }}</label>
+                                <div class="col-sm-9">
+                                    <select name="sender_city_address" id="input-sender-city-address" class="form-select">
+                                        <option value="{{ sender_city_id_address }}" selected>{{ parcel_info.sender.addressDescr }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-address">{{ text_address }}</label>
+                                <div class="col-sm-9">
+                                    <select name="sender_address" id="input-sender-address" class="form-select">
+                                        <option value="{{ parcel_info.sender.addressID }}" selected>{{ parcel_info.sender.addressDescr }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-building">{{ text_building }}</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="sender_building" value="{{ parcel_info.sender.building }}" id="input-sender-building" class="form-control" placeholder="{{ text_building }}">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-floor">{{ text_floor }}</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="sender_floor" value="{{ parcel_info.sender.floor }}" id="input-sender-floor" class="form-control" placeholder="{{ text_floor }}">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-sender-apartment">{{ text_apartment }}</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="sender_apartment" value="{{ parcel_info.sender.flat }}" id="input-sender-apartment" class="form-control" placeholder="{{ text_apartment }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 class="card-title mb-0">{{ text_recipient }}</h3>
+                            <div class="btn-group" role="group" data-bs-toggle="buttons">
+                                <input type="radio" class="btn-check" name="recipient_address_type" value="branch" id="recipient_branch" {{ parcel_info.receiver.service == 'Branch' ? 'checked' : '' }}>
+                                <label class="btn btn-outline-primary btn-sm" for="recipient_branch" data-bs-toggle="tooltip" title="{{ button_recipient_branch_delivery }}">
+                                    {{ text_branch }}
+                                </label>
+                                <input type="radio" class="btn-check" name="recipient_address_type" value="doors" id="recipient_doors" {{ parcel_info.receiver.service == 'Door' ? 'checked' : '' }}>
+                                <label class="btn btn-outline-primary btn-sm" for="recipient_doors" data-bs-toggle="tooltip" title="{{ button_recipient_doors_delivery }}">
+                                    {{ text_doors }}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="recipient_branch_delivery" style="{{ parcel_info.receiver.service != 'Branch' ? 'display: none;' : '' }}">
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient">{{ entry_contact_person }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient" value="{{ parcel_info.receiver.name }}" placeholder="{{ entry_contact_person }}" id="input-recipient" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_phone">{{ entry_phone }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient_phone" value="{{ parcel_info.receiver.phone }}" placeholder="{{ entry_phone }}" id="input-recipient_phone" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_region">{{ entry_region }}</label>
+                                    <div class="col-sm-9">
+                                        <select name="recipient_region" id="input-recipient_region" class="form-select">
+                                            <option value="">{{ text_select }}</option>
+                                            {% for region in regions %}
+                                                <option value="{{ region.region_id }}" {% if region.region_id == branch_recipient_info.region_id %}selected{% endif %}>{{ region.region_name_ua }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_city">{{ entry_city }}</label>
+                                    <div class="col-sm-9">
+                                        <select name="recipient_city" id="input-recipient_city" class="form-select">
+                                            <option value="">{{ text_select }}</option>
+                                            {% if branch_recipient_info.city_id %}
+                                            <option value="{{ branch_recipient_info.city_id }}" selected>{{ branch_recipient_info.city_name_ua }}</option>
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_branch">{{ entry_branch }}</label>
+                                    <div class="col-sm-9">
+                                        <select name="recipient_branch" id="input-recipient_branch" class="form-select">
+                                            <option value="{{ parcel_info.receiver.branchID }}" selected>{{ branch_recipient_info.branch_descr_ua }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="recipient_address_delivery" style="{{ parcel_info.receiver.service != 'Door' ? 'display: none;' : '' }}">
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient-address">{{ entry_contact_person }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient-address" value="{{ parcel_info.receiver.name }}" placeholder="{{ entry_contact_person }}" id="input-recipient-address" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_phone-address">{{ entry_phone }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient_phone-address" value="{{ parcel_info.receiver.phone }}" placeholder="{{ entry_phone }}" id="input-recipient_phone-address" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_region_address">{{ entry_region }}</label>
+                                    <div class="col-sm-9">
+                                        <select name="recipient_region_address" id="input-recipient_region_address" class="form-select">
+                                            <option value="">{{ text_select }}</option>
+                                            {% for region in regions %}
+                                                <option value="{{ region.region_id }}" {% if region.region_id == receiver_region_id_address %}selected{% endif %}>{{ region.region_name_ua }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_city_address">{{ entry_city }}</label>
+                                    <div class="col-sm-9">
+                                        <select name="recipient_city_address" id="input-recipient_city_address" class="form-select">
+                                            <option value="{{ receiver_city_id_address }}" selected>{{ parcel_info.receiver.addressDescr }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient_address">{{ text_address }}</label>
+                                    <div class="col-sm-9">
+                                        <select name="recipient_address" id="input-recipient_address" class="form-select">
+                                            <option value="{{ parcel_info.receiver.addressID }}" selected>{{ parcel_info.receiver.addressDescr }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient-building-address">{{ text_building }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient_building_address" value="{{ parcel_info.receiver.building }}" id="input-recipient-building-address" class="form-control" placeholder="{{ text_building }}">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient-floor-address">{{ text_floor }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient_floor_address" value="{{ parcel_info.receiver.floor }}" id="input-recipient-floor-address" class="form-control" placeholder="{{ text_floor }}">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-recipient-apartment-address">{{ text_apartment }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" name="recipient_apartment_address" value="{{ parcel_info.receiver.flat }}" id="input-recipient-apartment-address" class="form-control" placeholder="{{ text_apartment }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title mb-0">{{ text_departure_options }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="places-container">
+                                {% for place in parcel_info.placesItems %}
+                                <div class="place-item" data-index="{{ loop.index0 }}" style="padding-bottom: 20px; margin-bottom: 20px; {% if not loop.last %}border-bottom: 1px solid #e0e0e0;{% endif %}">
+                                    <legend class="form-label" style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; color: #0061AF; margin-bottom: 10px;">{{ text_seat }} {{ loop.index }}</legend>
+                                    <div class="row mb-3">
+                                        <label class="col-sm-3 col-form-label">{{ entry_weight }}</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" step="0.01" name="places[{{ loop.index0 }}][weight]" value="{{ place.weight }}" placeholder="{{ entry_weight }}" class="form-control" required/>
+                                                <span class="input-group-text">{{ text_kg }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <label class="col-sm-3 col-form-label">{{ entry_length }}</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" step="0.01" name="places[{{ loop.index0 }}][length]" value="{{ place.length }}" placeholder="{{ entry_length }}" class="form-control" required/>
+                                                <span class="input-group-text">{{ text_cm }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <label class="col-sm-3 col-form-label">{{ entry_width }}</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" step="0.01" name="places[{{ loop.index0 }}][width]" value="{{ place.width }}" placeholder="{{ entry_width }}" class="form-control" required/>
+                                                <span class="input-group-text">{{ text_cm }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <label class="col-sm-3 col-form-label">{{ entry_height }}</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" step="0.01" name="places[{{ loop.index0 }}][height]" value="{{ place.height }}" placeholder="{{ entry_height }}" class="form-control" required/>
+                                                <span class="input-group-text">{{ text_cm }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <label class="col-sm-3 col-form-label">{{ entry_quantity }}</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" step="1" name="places[{{ loop.index0 }}][quantity]" value="{{ place.quantity }}" placeholder="{{ entry_quantity }}" class="form-control" required/>
+                                                <span class="input-group-text">{{ text_pc }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <label class="col-sm-3 col-form-label">{{ entry_insurance }}</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" step="0.01" name="places[{{ loop.index0 }}][insurance]" value="{{ place.insurance }}" placeholder="{{ entry_insurance }}" class="form-control" required/>
+                                                <span class="input-group-text">{{ text_uah }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-sm-9 offset-sm-3 text-end">
+                                            <button type="button" class="btn btn-danger remove-place" {% if loop.length == 1 %}style="display:none;"{% endif %}>{{ text_delete_seat }}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-success" id="add-place">{{ text_add_a_seat }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title mb-0">{{ text_payment }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-delivery_payer">{{ entry_delivery_payer }}</label>
+                                <div class="col-sm-9">
+                                    <div class="btn-group" role="group" data-bs-toggle="buttons">
+                                        {% for v in references.payer_types %}
+                                            <input type="radio" class="btn-check" name="delivery_payer" value="{{ v.Ref }}" id="input-delivery_payer-{{ v.Ref }}" {% if (parcel_info.receiverPay and v.Ref == 'Receiver') or (not parcel_info.receiverPay and v.Ref == 'Sender') %}checked{% endif %}>
+                                            <label class="btn btn-outline-primary" for="input-delivery_payer-{{ v.Ref }}">{{ v.Description }}</label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="input-payment_type">{{ entry_payment_type }}</label>
+                                <div class="col-sm-9">
+                                    <div class="btn-group" role="group" data-bs-toggle="buttons">
+                                        {% for v in references.payment_types %}
+                                            <input type="radio" class="btn-check" name="payment_type" value="{{ v.Ref }}" id="input-payment_type-{{ v.Ref }}" {% if v.Ref == parcel_info.payType %}checked{% endif %}>
+                                            <label class="btn btn-outline-primary" for="input-payment_type-{{ v.Ref }}">{{ v.Description }}</label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-3 col-form-label" for="toggle-cod">{{ text_cod }}</label>
+                                <div class="col-sm-9">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="toggle-cod" name="cod_toggle" {% if parcel_info.COD > 0 %}checked{% endif %}>
+                                        <label class="form-check-label" for="toggle-cod"></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="cod-amount-container" style="{% if parcel_info.COD == 0 %}display: none;{% endif %}">
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-cod-amount">{{ text_cod_amount }}</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input type="text" id="input-cod-amount" name="cod_amount" value="{{ parcel_info.COD }}" placeholder="{{ text_enter_cod_amount }}" class="form-control" />
+                                            <span class="input-group-text">{{ text_uah }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-card-number">{{ text_card_number }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" id="input-card-number" name="card_number" value="{{ parcel_info.cardForCOD.number|default('') }}" placeholder="{{ text_enter_card_number }}" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-ownername">{{ text_ownername }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" id="input-ownername" name="ownername" value="{{ parcel_info.cardForCOD.ownername|default('') }}" placeholder="{{ text_enter_ownername }}" class="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label" for="input-ownermobile">{{ text_ownermobile }}</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" id="input-ownermobile" name="ownermobile" value="{{ parcel_info.cardForCOD.ownermobile|default('') }}" placeholder="{{ text_enter_ownermobile }}" class="form-control"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Toggle sender address type fields
+        $('input[name="sender_address_type"]').change(function() {
+            var selectedType = $(this).val();
+            $('#sender_delivery_type').val(selectedType);
+            $('#sender_branch_delivery').hide();
+            $('#sender_address_delivery').hide();
+            
+            if (selectedType === 'branch') {
+                $('#sender_branch_delivery').show();
+            } else if (selectedType === 'doors') {
+                $('#sender_address_delivery').show();
+            }
+        });
+
+        // Toggle recipient address type fields
+        $('input[name="recipient_address_type"]').change(function() {
+            var selectedType = $(this).val();
+            $('#recipient_delivery_type').val(selectedType);
+            $('#recipient_branch_delivery').hide();
+            $('#recipient_address_delivery').hide();
+            
+            if (selectedType === 'branch') {
+                $('#recipient_branch_delivery').show();
+            } else if (selectedType === 'doors') {
+                $('#recipient_address_delivery').show();
+            }
+        });
+
+        // Initialize on page load
+        $('input[name="sender_address_type"]:checked').trigger('change');
+        $('input[name="recipient_address_type"]:checked').trigger('change');
+        
+        // COD toggle functionality
+        $('#toggle-cod').change(function() {
+            if ($(this).is(':checked')) {
+                $('.cod-amount-container').slideDown();
+            } else {
+                $('.cod-amount-container').slideUp();
+            }
+        });
+        
+        // Initialize remove buttons visibility on page load
+        if ($('#places-container .place-item').length === 1) {
+            $('.remove-place').hide();
+            $('#places-container .place-item').first().css('border-bottom', 'none');
+        }
+        
+        // Add Place functionality
+        let placeIndex = {{ parcel_info.placesItems|length }};
+        $('#add-place').on('click', function() {
+            const container = document.getElementById('places-container');
+            const newPlace = document.createElement('div');
+            newPlace.classList.add('place-item');
+            newPlace.dataset.index = placeIndex;
+            newPlace.style.borderBottom = '1px solid #e0e0e0';
+            newPlace.style.paddingBottom = '20px';
+            newPlace.style.marginBottom = '20px';
+            newPlace.innerHTML = `
+                <legend class="form-label" style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; color: #0061AF; margin-bottom: 10px;">{{ text_seat }}</legend>
+                <div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">{{ entry_weight }}</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input type="text" step="0.01" name="places[${placeIndex}][weight]" value="" placeholder="{{ entry_weight }}" class="form-control" required/>
+                            <span class="input-group-text">{{ text_kg }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">{{ entry_length }}</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input type="text" step="0.01" name="places[${placeIndex}][length]" value="" placeholder="{{ entry_length }}" class="form-control" required/>
+                            <span class="input-group-text">{{ text_cm }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">{{ entry_width }}</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input type="text" step="0.01" name="places[${placeIndex}][width]" value="" placeholder="{{ entry_width }}" class="form-control" required/>
+                            <span class="input-group-text">{{ text_cm }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">{{ entry_height }}</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input type="text" step="0.01" name="places[${placeIndex}][height]" value="" placeholder="{{ entry_height }}" class="form-control" required/>
+                            <span class="input-group-text">{{ text_cm }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">{{ entry_quantity }}</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input type="text" step="1" name="places[${placeIndex}][quantity]" value="" placeholder="{{ entry_quantity }}" class="form-control" required/>
+                            <span class="input-group-text">{{ text_pc }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">{{ entry_insurance }}</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input type="text" step="0.01" name="places[${placeIndex}][insurance]" value="" placeholder="{{ entry_insurance }}" class="form-control" required/>
+                            <span class="input-group-text">{{ text_uah }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-9 offset-sm-3">
+                        <button type="button" class="btn btn-danger remove-place float-end">{{ text_delete_seat }}</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(newPlace);
+            
+            // Update last item border
+            const allPlaces = $('#places-container .place-item');
+            allPlaces.css('border-bottom', '1px solid #e0e0e0');
+            allPlaces.last().css('border-bottom', 'none');
+            
+            // Show all remove buttons if more than 1 place
+            if (container.children.length > 1) {
+                $('.remove-place').show();
+            }
+            placeIndex++;
+        });
+        
+        // Remove place functionality
+        $('#places-container').on('click', '.remove-place', function() {
+            const placeItem = $(this).closest('.place-item');
+            placeItem.remove();
+            
+            // Update last item border
+            const allPlaces = $('#places-container .place-item');
+            allPlaces.css('border-bottom', '1px solid #e0e0e0');
+            allPlaces.last().css('border-bottom', 'none');
+            
+            // Hide all remove buttons if only 1 place remains
+            if (allPlaces.length === 1) {
+                $('.remove-place').hide();
+            }
+        });
+    });
+</script>
+
+{{ footer }}
